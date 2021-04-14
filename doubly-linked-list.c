@@ -139,6 +139,19 @@ int initialize(headNode** h) { //h는 headnode의 주소를 받는다
 }
 
 int freeList(headNode* h) {
+	/* h와 연결된 listNode 메모리 해제
+	 * headNode도 해제되어야 함.
+	 */
+	listNode* p = h->first; //포인터 p가 first가 가리키고있는 노드를 가리키게한다
+	p->llink->rlink = NULL; //마지막에 할당 해제 할 때 last노드가 무의미한 곳을 가리키면 끝났는지 알 수없기 때문에 last노드의 rlink는 NULL을 가리키도록 한다
+
+	listNode* prev = NULL;
+	while (p != NULL) { //포인터 p가 NULL이 아니라면 (반복문을 빠져 나올때 first가 가리키고 있는 노드는 없는 상태)
+		prev = p; // p가 가리키는 곳을 prev이 가리킨다
+		p = p->rlink; //p는 다음 노드를 가리킨다
+		free(prev); // prev이 가리키는 곳을 할당 해제 한다
+	}
+	free(h); //h가 가리키고 있는 힙 영역의 공간을 해제한다
 	return 0;
 }
 
