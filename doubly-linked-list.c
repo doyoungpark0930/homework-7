@@ -166,16 +166,21 @@ void printList(headNode* h) {
 		printf("Nothing to print....\n");
 		return;
 	}
-
+	
 	p = h->first;
 
-	while (p != NULL) {
+	
+	while(p!=NULL){		
 		printf("[ [%d]=%d ] ", i, p->key);
 		p = p->rlink;
+		if (p == h->first) {	//p가 첫 노드를 가리키면 마지막 노드까지 다 출력 했다는 뜻,이제 총 노드의 수만 세고 함수를 빠져나온다
+			printf("  items = %d\n", i+1);
+			return;
+		}
 		i++;
 	}
 
-	printf("  items = %d\n", i);
+	
 }
 
 
@@ -185,7 +190,21 @@ void printList(headNode* h) {
  * list에 key에 대한 노드하나를 추가
  */
 int insertLast(headNode* h, int key) {
-
+	listNode * p=h->first;
+	listNode* node = (listNode*)malloc(sizeof(listNode)); // node하나를 동적 할당
+	node->key = key; //node에 key값을 대입
+	
+	if (p == NULL) { //노드가 없다면 
+		h->first = node;
+		h->first->llink = node;
+		h->first->rlink = node;
+	}
+	else { //노드가 하나 이상 있다면
+		node->rlink = p;
+		node->llink = p->llink;
+		p->llink->rlink = node;
+		p->llink = node;
+	}
 	return 0;
 }
 
@@ -195,6 +214,17 @@ int insertLast(headNode* h, int key) {
  * list의 마지막 노드 삭제
  */
 int deleteLast(headNode* h) {
+	listNode* p = h->first; //p는 first가 가리키는 노드를 가리킴
+	listNode* trail = p->llink; //trail은 마지막 노드를 가리킴
+	if (p == p->rlink) { //노드가 하나밖에 없다면
+		h->first = NULL;
+		free(trail);
+		return 0;
+	}
+	p->llink->llink->rlink = p; //마지막에서 두번째 노드의 rlink는 p를 가리킴
+	p->llink = p->llink->llink;//p의 llink는 마지막에서 두번째 노드를 가리킴
+	 
+	free(trail); //p가 가리키는 곳 할당해제
 
 
 	return 0;
@@ -243,5 +273,4 @@ int deleteNode(headNode* h, int key) {
 
 	return 1;
 }
-
 
