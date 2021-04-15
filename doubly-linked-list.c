@@ -1,7 +1,7 @@
 /*
  *  doubly-linked-list.c
  *	작성자 : 박도영
- *  작성일자 : 2021/04/14
+ *  작성일자 : 2021/04/15
  *  Doubly Linked List
  *
  *  Data Structures
@@ -143,8 +143,9 @@ int freeList(headNode* h) {
 	 * headNode도 해제되어야 함.
 	 */
 	listNode* p = h->first; //포인터 p가 first가 가리키고있는 노드를 가리키게한다
-	p->llink->rlink = NULL; //마지막에 할당 해제 할 때 last노드가 무의미한 곳을 가리키면 끝났는지 알 수없기 때문에 last노드의 rlink는 NULL을 가리키도록 한다
-
+	if (p!=NULL) {//노드가 하나 이상 있다면
+		p->llink->rlink = NULL; //마지막에 할당 해제 할 때 last노드가 무의미한 곳을 가리키면 끝났는지 알 수없기 때문에 last노드의 rlink는 NULL을 가리키도록 한다
+	}
 	listNode* prev = NULL;
 	while (p != NULL) { //포인터 p가 NULL이 아니라면 (반복문을 빠져 나올때 first가 가리키고 있는 노드는 없는 상태)
 		prev = p; // p가 가리키는 곳을 prev이 가리킨다
@@ -152,6 +153,13 @@ int freeList(headNode* h) {
 		free(prev); // prev이 가리키는 곳을 할당 해제 한다
 	}
 	free(h); //h가 가리키고 있는 힙 영역의 공간을 해제한다
+
+
+
+
+
+
+
 	return 0;
 }
 
@@ -215,16 +223,22 @@ int insertLast(headNode* h, int key) {
  */
 int deleteLast(headNode* h) {
 	listNode* p = h->first; //p는 first가 가리키는 노드를 가리킴
-	listNode* trail = p->llink; //trail은 마지막 노드를 가리킴
-	if (p == p->rlink) { //노드가 하나밖에 없다면
-		h->first = NULL;
-		free(trail);
-		return 0;
+	if (p != NULL) {
+		listNode* trail = p->llink; //trail은 마지막 노드를 가리킴
+		if (p == p->rlink) { //노드가 하나밖에 없다면
+			h->first = NULL;
+			free(trail);
+			return 0;
+		}
+		p->llink->llink->rlink = p; //마지막에서 두번째 노드의 rlink는 p를 가리킴
+		p->llink = p->llink->llink;//p의 llink는 마지막에서 두번째 노드를 가리킴
+
+		free(trail); //p가 가리키는 곳 할당해제
 	}
-	p->llink->llink->rlink = p; //마지막에서 두번째 노드의 rlink는 p를 가리킴
-	p->llink = p->llink->llink;//p의 llink는 마지막에서 두번째 노드를 가리킴
-	 
-	free(trail); //p가 가리키는 곳 할당해제
+	else
+	{
+		printf("No nodes assigned\n");
+	}
 
 
 	return 0;
@@ -236,6 +250,21 @@ int deleteLast(headNode* h) {
  * list 처음에 key에 대한 노드하나를 추가
  */
 int insertFirst(headNode* h, int key) {
+	listNode* p = h->first;
+	listNode* node = (listNode*)malloc(sizeof(listNode)); // node하나를 동적 할당
+	node->key = key; //node에 key값을 대입
+	if (p == NULL) { //노드가 없다면 
+		h->first = node;
+		h->first->llink = node;
+		h->first->rlink = node;
+	}
+	else { //노드가 하나 이상 있다면
+		node->rlink = p;
+		node->llink = p->llink;
+		p->llink->rlink = node;
+		p->llink = node;
+		h->first = node;
+	}
 	return 0;
 }
 
@@ -243,7 +272,25 @@ int insertFirst(headNode* h, int key) {
  * list의 첫번째 노드 삭제
  */
 int deleteFirst(headNode* h) {
+	listNode* p = h->first; //p는 first가 가리키는 노드를 가리킴
+	listNode* trail = NULL;
+	if (p != NULL) {
+		trail = p->rlink;
+		if (trail == p) { //노드가 하나 뿐이라면
+			free(p);
+			h->first = NULL;
+		}
+		else {
+			p->rlink->llink = p->llink;
+			p->llink->rlink = p->rlink;
+			free(p);
+			h->first = trail;
+		}
 
+	}
+	else {
+		printf("No nodes assigned\n");
+	}
 	return 0;
 }
 
@@ -273,4 +320,5 @@ int deleteNode(headNode* h, int key) {
 
 	return 1;
 }
+
 
