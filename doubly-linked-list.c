@@ -1,7 +1,7 @@
 /*
  *  doubly-linked-list.c
  *	작성자 : 박도영
- *  작성일자 : 2021/04/15
+ *  작성일자 : 2021/04/16
  *  Doubly Linked List
  *
  *  Data Structures
@@ -308,7 +308,48 @@ int invertList(headNode* h) {
 
 /* 리스트를 검색하여, 입력받은 key보다 큰값이 나오는 노드 바로 앞에 삽입 */
 int insertNode(headNode* h, int key) {
+	listNode* node = (listNode*)malloc(sizeof(listNode));
+	node->key = key;
+	listNode* p = h->first;
+	listNode* trail = NULL;
 
+	if (h->first != NULL) { //first가 가리키는 노드가 있다면
+		while (node->key > p->key) {//node의 값이 p가 가리키는 값보다 크다면
+			trail = p; //p가 가리키는 값을 trail이 가리킨다
+			p = p->rlink; //p는 다음 노드를 가리킨다
+
+			if (p == h->first) { //p가 다시 처음 노드를 가리킨다는건 key값이 다른 노드의 값보다 가장 크다는 뜻
+				trail->rlink = node;	//따라서 마지막 노드에 삽입한다
+				node->llink = trail;
+				p->llink = node;
+				node->rlink = p;
+				
+				return 0;
+			}
+
+		}
+		if (p == h->first) { // node의 값이 첫 번째 노드의 값보다 작다는 뜻이니 맨 앞에 삽입
+			node->rlink = p;
+			node->llink = p->llink;
+			p->llink->rlink = node;
+			p->llink = node;
+			h->first = node;
+			
+			return 0;
+		}
+		trail->rlink = node;
+		node->llink = trail;
+		p->llink = node;
+		node->rlink = p;
+
+			
+	}
+	else //first가 가리키는 노드가 없다면
+	{ //할당된 노드를 추가한다
+		h->first = node;
+		h->first->llink = node;
+		h->first->rlink = node;
+	}
 	return 0;
 }
 
@@ -317,8 +358,39 @@ int insertNode(headNode* h, int key) {
  * list에서 key에 대한 노드 삭제
  */
 int deleteNode(headNode* h, int key) {
+	listNode* p = h->first;
+	if (h->first != NULL) { //first가 가리키는 노드가 있다면
+		
 
+		while (p->key != key) { // p가 가리키는 값과 입력받은 key가 다르다면
+			p = p->rlink;
+			if (p == h->first) { //여기서 p의 값이 first의값과 같다면 이미 모든 노드를 다 검사했다는 뜻 이므로, 값을 찾을 수 없다고 출력
+				printf("Cannot find the same value\n");
+				return 0;
+			}
+		}
+		if (p == h->first) { //첫번째 노드의 값과 입력받은 key가 같다면
+			if (p == p->rlink) { // 노드가 원래 하나만 존재 했을 때
+				h->first = NULL;
+			}
+			else //노드가 두 개 이상 존재 했을 때 
+			{
+				h->first = p->rlink;
+				p->rlink->llink = p->llink;
+				p->llink->rlink = p->rlink;
+			}
+			free(p);
+			return 0;
+		}
+		p->rlink->llink = p->llink;
+		p->llink->rlink = p->rlink;
+		free(p);
+
+	}
+	else
+	{//first가 가리키는 노드가 없다면
+		printf("Cannot find the same value\n");
+	}
 	return 1;
 }
-
 
