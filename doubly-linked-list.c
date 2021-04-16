@@ -300,7 +300,28 @@ int deleteFirst(headNode* h) {
  * 리스트의 링크를 역순으로 재 배치
  */
 int invertList(headNode* h) {
+	listNode* lead = h->first; //lead포인터는 맨 앞에 중간은 middle, 중간 앞에는 trail
+	if (lead != NULL) { //노드가 하나 이상 있을때 
+		lead = h->first->rlink; //lead가 두번 째 노드를 가리킨다 , 노드가 하나밖에 없을 떄는 자기자신을 가리킴
+		listNode* trail = h->first->llink; //trail은 마지막 노드를 가리킨다
+		listNode* middle = h->first; // middle은 첫 노드를 가리킨다
 
+
+		while (lead != h->first) { //노드가 가리키는 방향을 뒤집음으로써 역순배치
+			middle->rlink = trail;
+			middle->llink = lead;
+			trail = middle;
+			middle = lead;
+			lead = lead->rlink;
+		}
+		middle->rlink = trail; //마지막은 반복문에서 빠져나올때 처리가 안됨으로 여기서 처리
+		middle->llink = lead;
+		h->first = h->first->rlink; //first가 마지막 노드를 가리키고 있으므로 다시 첫 노드를 가리키게 한다
+	}
+	else
+	{
+		printf("No nodes assgined\n");
+	}
 	return 0;
 }
 
@@ -389,8 +410,9 @@ int deleteNode(headNode* h, int key) {
 	}
 	else
 	{//first가 가리키는 노드가 없다면
-		printf("Cannot find the same value\n");
+		printf("No node assigned\n");
 	}
 	return 1;
 }
+
 
