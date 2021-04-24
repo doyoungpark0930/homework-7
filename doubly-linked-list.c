@@ -1,7 +1,7 @@
 /*
  *  doubly-linked-list.c
  *	작성자 : 박도영
- *  작성일자 : 2021/04/16
+ *  작성일자 : 2021/04/24
  *  Doubly Linked List
  *
  *  Data Structures
@@ -60,7 +60,7 @@ int main()
 	char command;
 	int key;
 	headNode* headnode = NULL;
-
+	printf("use it initializing\n");
 	do {
 		printf("----------------------------------------------------------------\n");
 		printf("                     Doubly Linked  List                        \n");
@@ -71,7 +71,7 @@ int main()
 		printf(" Insert First  = f           Delete First  = t\n");
 		printf(" Invert List   = r           Quit          = q\n");
 		printf("----------------------------------------------------------------\n");
-
+		
 		printf("Command = ");
 		scanf(" %c", &command);
 
@@ -131,9 +131,8 @@ int initialize(headNode** h) { //h는 headnode의 주소를 받는다
 		freeList(*h);
 
 	// headNode에 대한 메모리를 할당하고 할당된 곳의 주소를 *h에 대입한다
-	headNode *temp = (headNode*)malloc(sizeof(headNode));
-	temp->first = NULL;
-	*h = temp;
+	*h = (headNode*)malloc(sizeof(headNode));
+	(*h)->first = NULL;
 	
 	return 1;
 }
@@ -143,9 +142,6 @@ int freeList(headNode* h) {
 	 * headNode도 해제되어야 함.
 	 */
 	listNode* p = h->first; //포인터 p가 first가 가리키고있는 노드를 가리키게한다
-	if (p!=NULL) {//노드가 하나 이상 있다면
-		p->llink->rlink = NULL; //마지막에 할당 해제 할 때 last노드가 무의미한 곳을 가리키면 끝났는지 알 수없기 때문에 last노드의 rlink는 NULL을 가리키도록 한다
-	}
 	listNode* prev = NULL;
 	while (p != NULL) { //포인터 p가 NULL이 아니라면 (반복문을 빠져 나올때 first가 가리키고 있는 노드는 없는 상태)
 		prev = p; // p가 가리키는 곳을 prev이 가리킨다
@@ -178,15 +174,13 @@ void printList(headNode* h) {
 	p = h->first;
 
 	
-	while(p!=NULL){		
+	while(p!=NULL){		//p가 NULL을 가리킬 때까지 반복한다.
 		printf("[ [%d]=%d ] ", i, p->key);
 		p = p->rlink;
-		if (p == h->first) {	//p가 첫 노드를 가리키면 마지막 노드까지 다 출력 했다는 뜻,이제 총 노드의 수만 세고 함수를 빠져나온다
-			printf("  items = %d\n", i+1);
-			return;
-		}
 		i++;
 	}
+	printf("  items = %d\n", i);
+	return;
 
 	
 }
@@ -199,19 +193,23 @@ void printList(headNode* h) {
  */
 int insertLast(headNode* h, int key) {
 	listNode * p=h->first;
+	listNode* trail = NULL; //노드가 하나 이상 있을 경우, p의 전 노드를 가리키기 위해 이용
 	listNode* node = (listNode*)malloc(sizeof(listNode)); // node하나를 동적 할당
 	node->key = key; //node에 key값을 대입
 	
 	if (p == NULL) { //노드가 없다면 
 		h->first = node;
-		h->first->llink = node;
-		h->first->rlink = node;
+		h->first->llink = NULL; //첫 노드니까 llink,rlink모두 NULL을 가리킨다
+		h->first->rlink = NULL;
 	}
 	else { //노드가 하나 이상 있다면
-		node->rlink = p;
-		node->llink = p->llink;
-		p->llink->rlink = node;
-		p->llink = node;
+		while (p != NULL) {
+			trail = p; // 마지막 빠져나올때 trail은 마지막 노드를 가리키고 있다.
+			p = p->rlink;
+		}
+		trail->rlink = node; //마지막에 노드 삽입
+		node->llink = trail;
+		node->rlink = NULL;
 	}
 	return 0;
 }
@@ -223,17 +221,22 @@ int insertLast(headNode* h, int key) {
  */
 int deleteLast(headNode* h) {
 	listNode* p = h->first; //p는 first가 가리키는 노드를 가리킴
-	if (p != NULL) {
-		listNode* trail = p->llink; //trail은 마지막 노드를 가리킴
-		if (p == p->rlink) { //노드가 하나밖에 없다면
-			h->first = NULL;
-			free(trail);
+	if (p != NULL) { //노드가 하나 이상 있을 때
+		if (p->rlink==NULL) { //노드가 하나밖에 없다면
+			free(p);
+			h->first = NULL; //가리키는 노드가 없으므로 NULL을 가리킨다
 			return 0;
 		}
-		p->llink->llink->rlink = p; //마지막에서 두번째 노드의 rlink는 p를 가리킴
-		p->llink = p->llink->llink;//p의 llink는 마지막에서 두번째 노드를 가리킴
+		else // 노드가 두개 이상 있을 때
+		{
+			while (p->rlink != NULL) { //마지막 나올 때 p가 마지막 노드를 가리키고 있음
+				p = p->rlink;
+			}
+			p->llink->rlink = NULL;// 마지막에서 두번 째 노드가 NULL을 가리키게 한다
+			free(p); //그리고 마지막 노드 해제
 
-		free(trail); //p가 가리키는 곳 할당해제
+
+		}
 	}
 	else
 	{
@@ -255,15 +258,15 @@ int insertFirst(headNode* h, int key) {
 	node->key = key; //node에 key값을 대입
 	if (p == NULL) { //노드가 없다면 
 		h->first = node;
-		h->first->llink = node;
-		h->first->rlink = node;
+		h->first->llink = NULL; //첫 노드니까 llink,rlink모두 NULL을 가리킨다
+		h->first->rlink = NULL;
 	}
 	else { //노드가 하나 이상 있다면
-		node->rlink = p;
-		node->llink = p->llink;
-		p->llink->rlink = node;
 		p->llink = node;
-		h->first = node;
+		node->rlink = p;
+		node->llink = NULL;
+		h->first = node; // first가 새로 생긴 첫 노드를 가리키게 한다.
+	
 	}
 	return 0;
 }
@@ -274,17 +277,15 @@ int insertFirst(headNode* h, int key) {
 int deleteFirst(headNode* h) {
 	listNode* p = h->first; //p는 first가 가리키는 노드를 가리킴
 	listNode* trail = NULL;
-	if (p != NULL) {
-		trail = p->rlink;
-		if (trail == p) { //노드가 하나 뿐이라면
+	if (p != NULL) { //노드가 한 개 이상 있을 때
+		if (p->rlink==NULL) { //노드가 하나 뿐이라면
 			free(p);
 			h->first = NULL;
 		}
-		else {
-			p->rlink->llink = p->llink;
-			p->llink->rlink = p->rlink;
+		else { //노드가 두 개 이상 있을때
+			h->first = p->rlink;
+			p->rlink->llink = NULL;
 			free(p);
-			h->first = trail;
 		}
 
 	}
@@ -303,11 +304,12 @@ int invertList(headNode* h) {
 	listNode* lead = h->first; //lead포인터는 맨 앞에 중간은 middle, 중간 앞에는 trail
 	if (lead != NULL) { //노드가 하나 이상 있을때 
 		lead = h->first->rlink; //lead가 두번 째 노드를 가리킨다 , 노드가 하나밖에 없을 떄는 자기자신을 가리킴
-		listNode* trail = h->first->llink; //trail은 마지막 노드를 가리킨다
 		listNode* middle = h->first; // middle은 첫 노드를 가리킨다
+		listNode* trail = NULL;
+		
 
 
-		while (lead != h->first) { //노드가 가리키는 방향을 뒤집음으로써 역순배치
+		while (lead != NULL) { //노드가 가리키는 방향을 뒤집음으로써 역순배치
 			middle->rlink = trail;
 			middle->llink = lead;
 			trail = middle;
@@ -316,7 +318,7 @@ int invertList(headNode* h) {
 		}
 		middle->rlink = trail; //마지막은 반복문에서 빠져나올때 처리가 안됨으로 여기서 처리
 		middle->llink = lead;
-		h->first = h->first->rlink; //first가 마지막 노드를 가리키고 있으므로 다시 첫 노드를 가리키게 한다
+		h->first = middle;// middle이 가리키고 있는 값이 첫 노드가 됨으로 first가 middle이 가리키는 곳을 가리킨다.
 	}
 	else
 	{
@@ -334,42 +336,33 @@ int insertNode(headNode* h, int key) {
 	listNode* p = h->first;
 	listNode* trail = NULL;
 
-	if (h->first != NULL) { //first가 가리키는 노드가 있다면
-		while (node->key > p->key) {//node의 값이 p가 가리키는 값보다 크다면
-			trail = p; //p가 가리키는 값을 trail이 가리킨다
+	if (p != NULL) { //노드가 한 개 이상이라면
+		while (p != NULL && node->key > p->key) { //node의 값이 p가 가리키는 값보다 크다면
+			trail = p;
 			p = p->rlink; //p는 다음 노드를 가리킨다
-
-			if (p == h->first) { //p가 다시 처음 노드를 가리킨다는건 key값이 다른 노드의 값보다 가장 크다는 뜻
-				trail->rlink = node;	//따라서 마지막 노드에 삽입한다
-				node->llink = trail;
-				p->llink = node;
-				node->rlink = p;
-				
-				return 0;
-			}
-
 		}
 		if (p == h->first) { // node의 값이 첫 번째 노드의 값보다 작다는 뜻이니 맨 앞에 삽입
 			node->rlink = p;
-			node->llink = p->llink;
-			p->llink->rlink = node;
+			node->llink = NULL;
 			p->llink = node;
 			h->first = node;
-			
-			return 0;
 		}
-		trail->rlink = node;
-		node->llink = trail;
-		p->llink = node;
-		node->rlink = p;
+		else {
+			node->rlink = p;
+			node->llink = trail;
+			trail->rlink = node;
+			if (p != NULL) { //p가 가리키는 값이 NULL이 아니라면, 즉 입력받은 key보다 큰 값이 어떤 노드에 존재한다면
+				p->llink = node;
+			}
+		}
 
 			
 	}
-	else //first가 가리키는 노드가 없다면
+	else //노드가 없다면
 	{ //할당된 노드를 추가한다
+		node->llink = NULL;
+		node->rlink = NULL;
 		h->first = node;
-		h->first->llink = node;
-		h->first->rlink = node;
 	}
 	return 0;
 }
@@ -380,32 +373,31 @@ int insertNode(headNode* h, int key) {
  */
 int deleteNode(headNode* h, int key) {
 	listNode* p = h->first;
-	if (h->first != NULL) { //first가 가리키는 노드가 있다면
-		
+	if (p != NULL) { //first가 가리키는 노드가 있다면
 
-		while (p->key != key) { // p가 가리키는 값과 입력받은 key가 다르다면
+		while (p!= NULL && p->key != key) { // p가 가리키는 값과 입력받은 key가 다르다면
 			p = p->rlink;
-			if (p == h->first) { //여기서 p의 값이 first의값과 같다면 이미 모든 노드를 다 검사했다는 뜻 이므로, 값을 찾을 수 없다고 출력
-				printf("Cannot find the same value\n");
-				return 0;
-			}
+			
 		}
 		if (p == h->first) { //첫번째 노드의 값과 입력받은 key가 같다면
-			if (p == p->rlink) { // 노드가 원래 하나만 존재 했을 때
-				h->first = NULL;
-			}
-			else //노드가 두 개 이상 존재 했을 때 
-			{
-				h->first = p->rlink;
-				p->rlink->llink = p->llink;
-				p->llink->rlink = p->rlink;
-			}
+			h->first = p->rlink;
 			free(p);
-			return 0;
+			if (h->first != NULL) { //노드가 두 개 이상 존재 했다면
+				h->first->llink = NULL;
+			}
 		}
-		p->rlink->llink = p->llink;
-		p->llink->rlink = p->rlink;
-		free(p);
+		else { 
+			if (p != NULL) { //p가 가리키는 노드의 값과 입력받은 key가 같을 때
+				p->llink->rlink = p->rlink;
+				if (p->rlink != NULL) { //p가 가리키는 값이 맨 마지막 노드가 아닐 때
+					p->rlink->llink = p->llink;
+				}
+				free(p);
+			}
+			else {//p가 NULL을 가리킬 때, 즉 일치하는 노드가 없을 때
+				printf("can't find the vaule.\n");
+			}
+		}
 
 	}
 	else
